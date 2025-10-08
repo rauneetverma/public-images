@@ -37,7 +37,7 @@ jobs:
       run: |
         curl -sSL https://facets-cloud.github.io/facets-schemas/scripts/fctl_install.sh | bash && source ~/.bashrc
         export PATH="$HOME/facetsctl/bin:$PATH"
-        export DOCKER_IMAGE_URL="docker.io/rauneetverma/http-echo:latest"
+        export DOCKER_IMAGE_URL="rauneetverma/http-echo:latest"
         export TOKEN="d2e6e442-8719-446f-82d6-e5ea287d6929"
         export TARGET=dev
         curl -s https://facets-cloud.github.io/facets-schemas/scripts/fctl_register_target.sh | bash -s -- \
