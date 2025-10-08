@@ -3,7 +3,7 @@ name: CI Integration Pipeline (Docker Hub Image)
 env:
   user_email: "rauneet.verma@facets.cloud"
   climb_project_name: "testing-prj-1"
-  climb-token-dev: ${{ secrets.CLIMB_TOKEN_DEV }}
+  climb-token-dev: "d2e6e442-8719-446f-82d6-e5ea287d6929"
   service_name: "http-echo"
   backend-image-name: "rauneetverma/http-echo"
   backend-image-tag: "latest"
@@ -31,20 +31,20 @@ jobs:
     - name: Verify Docker image availability
       run: |
         echo "Checking if Docker image exists..."
-        docker pull ${{ env.backend-image-name }}:${{ env.backend-image-tag }}
+        docker pull "rauneetverma/http-echo:latest"
 
     - name: CI Integration with Facets Climb
       run: |
         curl -sSL https://facets-cloud.github.io/facets-schemas/scripts/fctl_install.sh | bash && source ~/.bashrc
         export PATH="$HOME/facetsctl/bin:$PATH"
-        export DOCKER_IMAGE_URL="${{ env.backend-image-name }}:${{ env.backend-image-tag }}"
-        export TOKEN="${{ env.climb-token-dev }}"
+        export DOCKER_IMAGE_URL="rauneetverma/http-echo:latest"
+        export TOKEN="d2e6e442-8719-446f-82d6-e5ea287d6929"
         export TARGET=dev
         curl -s https://facets-cloud.github.io/facets-schemas/scripts/fctl_register_target.sh | bash -s -- \
-          -u ${{ env.user_email }} \
+          -u rauneet.verma@facets.cloud \
           -c https://facetsdemo.console.facets.cloud \
-          -p ${{ env.climb_project_name }} \
-          -s ${{ env.service_name }} \
+          -p testing-prj-1 \
+          -s http-echo \
           -a rauneetverma \
           -i "true" \
           -m ENVIRONMENT
