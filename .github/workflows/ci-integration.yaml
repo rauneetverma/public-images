@@ -1,0 +1,78 @@
+name: CI Integration Pipeline
+env:
+  jdk-distribution: "adopt"
+  jdk-version: "21"
+  gradle-dist-version: "8.9"
+  backend-directory: "backend"
+  blackduck-steps: false                # disable if not needed
+  blackduck-project-name: "http-echo"
+  backend-image-name: "rauneetverma/http-echo"
+  backend-image-tag: "latest"
+  dockerfile-path: "Dockerfile"
+  user_email: "rauneet.verma@facets.cloud"
+  climb_project_name: "testing-prj-1"
+  climb-token-dev: ${{ secrets.CLIMB_TOKEN_DEV }}
+  service_name: "http-echo"
+
+on:
+  push:
+    branches:
+      - main
+      - task/ci-action-test
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Code checkout
+      uses: actions/checkout@v3
+
+    - name: Setup JDK
+      uses: actions/setup-java@v2
+      with:
+        distribution: ${{ env.jdk-distribution }}
+        java-version: ${{ env.jdk-version }}
+
+    - name: Setup Gradle
+      uses: gradle/gradle-build-action@v2
+      with:
+        gradle-version: ${{ env.gradle-dist-version }}
+
+    - name: Backend code build
+      working-directory: ${{ env.backend-directory }}
+      run: |
+        gradle clean build bootJar
+
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        registry: docker.io
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Build Docker image
+      id: build_docker_image
+      working-directory: ${{ env.backend-directory }}
+      run: |
+        docker build -t ${{ env.backend-image-name }}:${{ env.backend-image-tag }} . --file=${{ env.dockerfile-path }}
+        echo "image_name=${{ env.backend-image-name }}:${{ env.backend-image-tag }}" >> $GITHUB_ENV
+
+    - name: Push Docker image to Docker Hub
+      run: |
+        docker push ${{ env.backend-image-name }}:${{ env.backend-image-tag }}
+
+    - name: CI Integration with facetsctl
+      run: |
+        curl -sSL https://facets-cloud.github.io/facets-schemas/scripts/fctl_install.sh | bash && source ~/.bashrc
+        export PATH="$HOME/facetsctl/bin:$PATH"
+        export DOCKER_IMAGE_URL="${{ env.backend-image-name }}:${{ env.backend-image-tag }}"
+        export TOKEN="${{ env.climb-token-dev }}"
+        export TARGET=dev
+        curl -s https://facets-cloud.github.io/facets-schemas/scripts/fctl_register_target.sh | bash -s -- \
+          -u ${{ env.user_email }} \
+          -c https://facetsdemo.console.facets.cloud \
+          -p ${{ env.climb_project_name }} \
+          -s ${{ env.service_name }} \
+          -a rauneetverma \
+          -i "true" \
+          -m ENVIRONMENT
