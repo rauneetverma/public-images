@@ -46,5 +46,5 @@ jobs:
           -p testing-prj-1 \
           -s http-echo \
           -a rauneetverma \
-          -i "true" \
+          -i "false" \
           -m ENVIRONMENT
