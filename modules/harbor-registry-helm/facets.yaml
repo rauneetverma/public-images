@@ -1,0 +1,134 @@
+intent: harbor-registry
+flavor: helm
+version: '1.0'
+clouds:
+- kubernetes
+description: Harbor Container Registry deployed via Helm
+spec:
+  title: Harbor Container Registry
+  description: Harbor Container Registry deployed via Helm with internal database
+    and redis
+  type: object
+  required:
+  - registry_domain
+  - admin_password
+  properties:
+    registry_domain:
+      type: string
+      description: Domain name for Harbor registry
+      title: Registry Domain
+    admin_password:
+      type: string
+      description: Admin password for Harbor
+      title: Admin Password
+      x-ui-secret-ref: true
+    admin_username:
+      type: string
+      description: Admin username for Harbor
+      title: Admin Username
+      default: admin
+    storage_size:
+      type: string
+      description: Storage size for Harbor persistent volumes
+      title: Storage Size
+      default: 50Gi
+    expose_type:
+      type: string
+      description: How to expose Harbor service
+      title: Expose Type
+      enum:
+      - ingress
+      - loadbalancer
+      - nodeport
+      default: ingress
+    ingress_class_name:
+      type: string
+      description: Ingress class name
+      title: Ingress Class Name
+      default: nginx
+    namespace:
+      type: string
+      description: Kubernetes namespace for Harbor
+      title: Namespace
+      default: harbor
+    chart_version:
+      type: string
+      description: Harbor Helm chart version
+      title: Chart Version
+      default: 1.14.0
+    enable_https:
+      type: boolean
+      description: Enable HTTPS for Harbor
+      title: Enable HTTPS
+      default: true
+    enable_trivy:
+      type: boolean
+      description: Enable Trivy scanner
+      title: Enable Trivy
+      default: true
+    database_type:
+      type: string
+      description: Database type (internal or external)
+      title: Database Type
+      enum:
+      - internal
+      - external
+      default: internal
+    redis_type:
+      type: string
+      description: Redis type (internal or external)
+      title: Redis Type
+      enum:
+      - internal
+      - external
+      default: internal
+    replicas:
+      type: number
+      description: Number of replicas for Harbor components
+      title: Replicas
+      default: 1
+advanced:
+  title: Advanced Configuration
+  description: Advanced settings for Harbor deployment
+  type: object
+  x-ui-toggle: true
+  properties:
+    values:
+      type: object
+      title: Custom Helm Values
+      description: User-supplied Helm values to override default configuration
+      x-ui-yaml-editor: true
+inputs:
+  kubernetes_cluster:
+    type: '@outputs/kubernetes'
+    optional: false
+    description: Kubernetes cluster to deploy Harbor
+    providers:
+    - helm
+    - kubernetes
+outputs:
+  default:
+    type: '@outputs/harbor-registry'
+sample:
+  kind: harbor-registry
+  flavor: helm
+  version: '1.0'
+  disabled: false
+  spec:
+    registry_domain: harbor.example.com
+    admin_password: ${blueprint.self.secrets.harbor_admin_password}
+    admin_username: admin
+    storage_size: 50Gi
+    expose_type: ingress
+    ingress_class_name: nginx
+    namespace: harbor
+    chart_version: 1.14.0
+    enable_https: true
+    enable_trivy: true
+    database_type: internal
+    redis_type: internal
+    replicas: 1
+  inputs:
+    kubernetes_cluster:
+      resource_name: default
+      resource_type: kubernetes
